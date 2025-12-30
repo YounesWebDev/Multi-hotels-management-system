@@ -11,16 +11,54 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
+import { SharedData, type NavItem } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
+import { Bed, BookOpen, Building, Building2, CalendarCheck, Folder, LayoutGrid, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
-const mainNavItems: NavItem[] = [
+const ManagerNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: '/dashboard',
         icon: LayoutGrid,
+    },
+    {
+        title: 'Rooms',
+        href: '/rooms',
+        icon: Bed,
+    },
+    {
+        title: 'Guests',
+        href: '/guests',
+        icon: Users,
+    },
+    {
+        title: 'Bookings',
+        href: '/bookings',
+        icon: CalendarCheck,
+    },
+];
+
+const AdminNavItems: NavItem[] = [
+    {
+        title: 'Dashboard',
+        href: '/dashboard',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Assign Manager',
+        href: '/assign-manager',
+        icon: Bed,
+    },
+    {
+        title: 'Guests',
+        href: '/guests',
+        icon: Users,
+    },
+    {
+        title: 'Manage Hotels',
+        href: '/hotels',
+        icon: Building2,
     },
 ];
 
@@ -38,28 +76,58 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
-    return (
+    const {auth} = usePage<SharedData>().props;
+    const user = auth?.user;
+    if(user?.role === 'manager' && !user?.tenant_id){
+        return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href='/dashboard' prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>
-
+    
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={[{title: 'Dashboard' , href: '/dashboard' , icon: LayoutGrid}]} />
             </SidebarContent>
-
+    
             <SidebarFooter>
                 <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>
     );
+    }
+    const isAdmin = auth?.user?.role === 'admin';
+    return (
+        <Sidebar collapsible="icon" variant="inset">
+            <SidebarHeader>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton size="lg" asChild>
+                            <Link href='/dashboard' prefetch>
+                                <AppLogo />
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarHeader>
+    
+            <SidebarContent>                         
+                <NavMain items={isAdmin ? AdminNavItems : ManagerNavItems} />
+            </SidebarContent>
+    
+            <SidebarFooter>
+                <NavFooter items={footerNavItems} className="mt-auto" />
+                <NavUser />
+            </SidebarFooter>
+        </Sidebar>
+    );
+    
 }
