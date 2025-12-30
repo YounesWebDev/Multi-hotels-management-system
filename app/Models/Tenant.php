@@ -1,0 +1,23 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\App;
+
+class Tenant extends Model
+{
+    protected $primaryKey = 'tenant_id';
+
+    protected $fillable = [
+        'hotel_name',
+        'address',
+        'contact_number'
+    ];
+
+    public $timestamps = false;
+
+    public function rooms(){
+        return $this->hasMany(\App\Models\Room::class , 'tenant_id' , 'tenant_id');
+    }
+}
