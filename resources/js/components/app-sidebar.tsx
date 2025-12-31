@@ -13,7 +13,7 @@ import {
 import { dashboard } from '@/routes';
 import { SharedData, type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { Bed, BookOpen, Building, Building2, CalendarCheck, Folder, LayoutGrid, Users } from 'lucide-react';
+import { Bed, BookOpen, Building, Building2, CalendarCheck, Folder, LayoutGrid, UserRoundCog, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const ManagerNavItems: NavItem[] = [
@@ -48,7 +48,7 @@ const AdminNavItems: NavItem[] = [
     {
         title: 'Assign Manager',
         href: '/assign-manager',
-        icon: Bed,
+        icon: UserRoundCog,
     },
     {
         title: 'Guests',
