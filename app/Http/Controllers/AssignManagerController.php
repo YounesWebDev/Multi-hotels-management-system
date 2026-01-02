@@ -61,23 +61,40 @@ class AssignManagerController extends Controller
             'hotels' => $hotelAssignments,
         ]);
     }
-
-    // Assign or unassign a manager to a hotel
-    public function unassign(Request $request , $managerId){
-        // Validate tenant ID
-        $request->validate([
-            'tenant_id' => 'required|exists:tenants,tenant_id',
-        ]);
-
+    //Unassign a manager
+    public function unassign($managerId){
         // Find the manager
         $manager = \App\Models\User::where('role','manager')->findOrFail($managerId);
 
         // Remove manager from any hotel
         $manager->tenant_id = null;
+
+        //save the modifications in db
         $manager->save();
 
         // Redirect back to assign manager page
         return redirect()->route('assign-manager');
+    }
+
+    // Assign a manager to a hotel
+    public function assign(Request $request , $managerId){
+        // Validate tenant ID
+        $request->validate([
+            'tenant_id' => 'required|exists:tenants,tenant_id',
+
+        ]);
+        
+        //get the manager from the db
+        $manager = \App\Models\User::where('role','manager')->findOrFail($managerId);
+
+        //assign the manager 
+        $manager->tenant_id = $request->tenant_id;
+
+        //save the modifications in db
+        $manager->save();
+
+        return redirect()->route('assign-manager');
+        
     }
 
     // Toggle user active/inactive status
