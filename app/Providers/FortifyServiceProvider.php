@@ -12,7 +12,8 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
-
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 class FortifyServiceProvider extends ServiceProvider
 {
     /**
@@ -31,6 +32,29 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
+
+        Fortify::authenticateUsing(function (Request $request) {
+
+        // 1️⃣ Check credentials (email + password)
+        if (! Auth::attempt($request->only('email', 'password'))) {
+            return null;
+        }
+
+        // 2️⃣ Get authenticated user
+        $user = Auth::user();
+
+        // 3️⃣ Block inactive non-admin users
+        if ($user && $user->role !== 'admin' && ! $user->is_active) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'Your account is inactive.',
+            ]);
+        }
+
+        // 4️⃣ Allow login
+        return $user;
+    });
     }
 
     /**
