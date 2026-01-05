@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -13,6 +14,7 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -35,26 +37,24 @@ class FortifyServiceProvider extends ServiceProvider
 
         Fortify::authenticateUsing(function (Request $request) {
 
-        // 1️⃣ Check credentials (email + password)
-        if (! Auth::attempt($request->only('email', 'password'))) {
-            return null;
-        }
+    // 1️⃣ Find user by email
+    $user = User::where('email', $request->email)->first();
 
-        // 2️⃣ Get authenticated user
-        $user = Auth::user();
+    // 2️⃣ Check password WITHOUT logging in
+    if (! $user || ! Hash::check($request->password, $user->password)) {
+        return null;
+    }
 
-        // 3️⃣ Block inactive non-admin users
-        if ($user && $user->role !== 'admin' && ! $user->is_active) {
-            Auth::logout();
+    // 3️⃣ Block inactive non-admin users
+    if ($user->role !== 'admin' && ! $user->is_active) {
+        throw ValidationException::withMessages([
+            'email' => 'Your account is inactive.',
+        ]);
+    }
 
-            throw ValidationException::withMessages([
-                'email' => 'Your account is inactive.',
-            ]);
-        }
-
-        // 4️⃣ Allow login
-        return $user;
-    });
+    // 4️⃣ Return user only — Fortify will handle login + 2FA
+    return $user;
+});
     }
 
     /**
