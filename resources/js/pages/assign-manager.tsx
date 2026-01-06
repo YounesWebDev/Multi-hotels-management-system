@@ -19,7 +19,7 @@ interface Hotel {
     manager: { id:number , name:string ; email:string } | null;
 }
 
-export default function AssignManger() {
+export default function AssignManager() {
     
     const {managers , hotels } = usePage().props as unknown as { managers : Manager[] , hotels: Hotel[]};
     const [loading , setLoading] = useState(false);
@@ -67,6 +67,7 @@ export default function AssignManger() {
                                         </div>
                                     ) : (
                                         <form onSubmit = { e => {
+                                            e.preventDefault();
                                             const formData = new FormData(e.currentTarget);
                                             const tenantId = Number(formData.get('tenant_id'));
                                             if(tenantId) handleAssign(manager.id , tenantId);

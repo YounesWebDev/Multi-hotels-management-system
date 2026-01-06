@@ -23,7 +23,7 @@ interface Hotel {
     rooms:Room[];
 }
 
-export default function dashboard() {
+export default function Dashboard() {
     // Get props sent from Laravel controller
     const {
         isAdmin,

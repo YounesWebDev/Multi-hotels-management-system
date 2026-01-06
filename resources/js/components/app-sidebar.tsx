@@ -18,7 +18,7 @@ import AppLogo from './app-logo';
 const ManagerNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: '/dashboard',
+        href: '/Dashboard',
         icon: LayoutGrid,
     },
     {
