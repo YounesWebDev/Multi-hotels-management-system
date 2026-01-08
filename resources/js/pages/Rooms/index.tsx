@@ -129,7 +129,7 @@ export default function ManageRooms() {
         setLoading(true);
 
         // DELETE
-        if (deleteId) {
+        if (deleteId && isDelete) {
             router.delete(route("rooms.destroy", deleteId), {
                 onSuccess: () => {
                     setLoading(false);
