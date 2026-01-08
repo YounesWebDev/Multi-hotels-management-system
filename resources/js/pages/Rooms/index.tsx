@@ -38,7 +38,7 @@ interface Room {
     Initial empty form
 ====================================================== */
 
-const emptyForm = {
+export const emptyForm = {
     room_number: "",
     type: "single",
     price_per_night: "",

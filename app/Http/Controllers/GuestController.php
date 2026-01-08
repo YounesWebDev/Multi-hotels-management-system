@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Guest; // Guest model
-use Illuminate\Http\Request; // Handle HTTP requests
-use Inertia\Inertia; // Inertia rendering
-use LDAP\Result; // Unused import
+use App\Models\Guest; 
+use Illuminate\Http\Request;
+use Inertia\Inertia; 
 
 class GuestController extends Controller
 {
@@ -49,7 +48,7 @@ class GuestController extends Controller
 
         return Inertia::render('Guests/index' , [
             'tenant_id' => $user->tenant_id,
-            'guests' => $guest // Sends single guest
+            'guests' => $guests
         ]);
     }
 

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AssignManagerController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GuestController;
 use App\Http\Controllers\HotelController;
 use App\Http\Controllers\RoomController;
 use Illuminate\Support\Facades\Route;
@@ -21,7 +22,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/assign-manager/{manager}/assign',[AssignManagerController::class,'assign'])->name('assign-manager.assign');
     Route::post('/assign-manager/{manager}/unassign',[AssignManagerController::class,'unassign'])->name('assign-manager.unassign');
     Route::post('/user/{id}/toggle-active', [AssignManagerController::class,'toggleActive'])->name('user.toggleActive');
-    Route::resource('rooms' , RoomController::class)->except(['create','edit','update']);
+    Route::resource('rooms' , RoomController::class)->except(['create','edit','update']); 
+    Route::resource('guests' , GuestController::class)->except(['create','edit']);
 });
 
 require __DIR__.'/settings.php';
