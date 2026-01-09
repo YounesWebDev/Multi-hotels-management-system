@@ -1,13 +1,14 @@
 import AppLayout from "@/layouts/app-layout";
-import { usePage , router } from "@inertiajs/react";
+import { usePage , router, Head } from "@inertiajs/react";
 import { Card }from '@/components/ui/card';
 import { Button } from "@/components/ui/button";
-import { Dialog , DialogContent , DialogHeader , DialogTitle } from "@/components/ui/dialog";
+import { Dialog , DialogContent , DialogFooter, DialogHeader , DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { route } from "ziggy-js";
 import { SheetClose } from "@/components/ui/sheet";
+import { Pencil, Plus, Trash, User } from "lucide-react";
 
 const emptyForm = {
     first_name : '', 
@@ -19,7 +20,7 @@ const emptyForm = {
 };
 
 export default function Guests() {
-    const {guests =[]} = usePage().props ;
+    const {guests} = usePage().props ;
     const [open, setOpen] = useState(false);
     const [form, setForm] = useState(emptyForm);
     const [loading, setLoading] = useState(false);
@@ -135,7 +136,224 @@ export default function Guests() {
             });
         }
     }
+
+    const guestsList = Array.isArray(guests) ? guests : [];
     return (
-        <AppLayout>Guests</AppLayout>
+        <AppLayout breadcrumbs={[{ title: "Manage Guests" , href: "/guests"}]}>
+            <Head title = "Manage Guests"/>
+            <div className="p-6">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center">
+                        <User className="mr-2 text-blue-500" size={32}/>
+                        <h1 className="text-2xl font-bold">Manage Guests</h1>
+                    </div>
+
+                    <Button onClick={handleOpen} className="gap-2">
+                        <Plus size={18}/>
+                        Add Guest
+                    </Button>
+                </div>
+                {/* Table */}
+                <div className="overflow-x-auto rounded-lg shadow border dark:border-gray-700">
+                    <table className="min-w-full bg-white dark:bg-gray-900">
+                        <thead>
+                            <tr className="bg-gray-100 dark:bg-gray-800">
+                                <th className="px-4 py-2 text-left">First Name</th>
+                                <th className="px-4 py-2 text-left">Last Name</th>
+                                <th className="px-4 py-2 text-left">Email</th>
+                                <th className="px-4 py-2 text-left">Phone</th>
+                                <th className="px-4 py-2 text-left">Check In</th>
+                                <th className="px-4 py-2 text-left">Check Out</th>
+                                <th className="px-4 py-2 text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {guestsList && guestsList.length > 0 ? (
+                                guestsList.map((guest) => (
+                                    <tr key={guest.guest_id} className="border-t dark:border-gray-700">
+                                        <td className="px-4 py-2">{guest.first_name}</td>
+                                        <td className="px-4 py-2">{guest.last_name}</td>
+                                        <td className="px-4 py-2">{guest.email}</td>
+                                        <td className="px-4 py-2">{guest.phone}</td>
+                                        <td className="px-4 py-2">{guest.check_in}</td>
+                                        <td className="px-4 py-2">{guest.check_out}</td>
+                                        <td className="px-4 py-2 text-center">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="mr-2"
+                                                onClick={() => handleOpenEdit(guest)}
+                                                >
+                                                    <Pencil size={18} />
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="destructive"
+                                                className="mr-2"
+                                                onClick={() => handleOpenDelete(guest.guest_id)}
+                                                >
+                                                    <Trash className="text-red-600" size={18} />
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ): (
+                                <tr>
+                                    <td
+                                        colSpan={7}
+                                        className="px-4 py-6 text-center font-bold text-gray-500 dark:text-gray-400"
+                                    >
+                                        No guests found.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Modal */}
+                <Dialog open={open} onOpenChange={setOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>
+                                {isDelete ? "Delete Guest" : isEdit ? "Edit Guest" : "Add Guest"}
+                            </DialogTitle>
+                        </DialogHeader>
+
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            {isDelete ? (
+                                <h3 className="text-red-500 text-center ">
+                                    Are you sure you want to delete this guest ?
+                                </h3>
+                            ) : (
+                                <>
+                                    <div>
+                                        <Label>Guest's First Name</Label>
+                                        <Input 
+                                            name="first_name"
+                                            value={form.first_name}
+                                            onChange={handleChange}
+                                            required
+                                            />
+                                            {errors.first_name && (
+                                                <div className="text-red-500 text-xs">
+                                                    {errors.first_name[0]}
+                                                </div>
+                                            )}
+                                    </div>
+
+                                    <div>
+                                        <Label>Guest's Last Name</Label>
+                                        <Input 
+                                            name="last_name"
+                                            value={form.last_name}
+                                            onChange={handleChange}
+                                            required
+                                            />
+                                            {errors.last_name && (
+                                                <div className="text-red-500 text-xs">
+                                                    {errors.last_name[0]}
+                                                </div>
+                                            )}
+                                    </div>
+                                    
+                                    <div>
+                                        <Label>Guest's Email</Label>
+                                        <Input 
+                                            name="email"
+                                            value={form.email}
+                                            onChange={handleChange}
+                                            required
+                                            type="email"
+                                            />
+                                            {errors.email && (
+                                                <div className="text-red-500 text-xs">
+                                                    {errors.email[0]}
+                                                </div>
+                                            )}
+                                    </div>
+                                    
+                                    <div>
+                                        <Label>Guest's Phone</Label>
+                                        <Input 
+                                            name="phone"
+                                            value={form.phone}
+                                            onChange={handleChange}
+                                            required
+                                            />
+                                            {errors.phone && (
+                                                <div className="text-red-500 text-xs">
+                                                    {errors.phone[0]}
+                                                </div>
+                                            )}
+                                    </div>
+                                    
+                                    <div>
+                                        <Label>Guest's Check In Date</Label>
+                                        <Input 
+                                            name="check_in"
+                                            value={form.check_in}
+                                            onChange={handleChange}
+                                            required
+                                            type="date"
+                                            />
+                                            {errors.check_in && (
+                                                <div className="text-red-500 text-xs">
+                                                    {errors.check_in[0]}
+                                                </div>
+                                            )}
+                                    </div>
+
+                                    <div>
+                                        <Label>Guest's Check Out Date</Label>
+                                        <Input 
+                                            name="check_out"
+                                            value={form.check_out}
+                                            onChange={handleChange}
+                                            required
+                                            type="date"
+                                            />
+                                            {errors.check_out && (
+                                                <div className="text-red-500 text-xs">
+                                                    {errors.check_out[0]}
+                                                </div>
+                                            )}
+                                    </div>
+                                </>
+                            )}
+
+                            <DialogFooter>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={handleClose}
+                                    disabled={loading}
+                                    >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    disabled={loading}>
+                                    {loading
+                                                ? isEdit
+                                                    ? "Saving..."
+                                                    : isDelete
+                                                    ? "Deleting..."
+                                                    : "Adding..."
+                                                : isEdit
+                                                ? "Save Changes"
+                                                :isDelete
+                                                ? "Delete"
+                                                : "Add"
+                                    }
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+            </div>
+
+        </AppLayout>
     )
 }
