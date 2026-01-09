@@ -105,7 +105,7 @@ export default function Dashboard() {
                             </Card>
 
                             {/* List of hotels */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 ">
+                            <div className="grid grid-cols-1 w-full md:grid-cols-2 gap-6 ">
                                 {safeHotels.map((hotel:Hotel) =>(
                                     <button key={hotel.tenant_id}
                                         className="text-left w-full focus:outline-none"

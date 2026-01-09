@@ -1,14 +1,11 @@
 import AppLayout from "@/layouts/app-layout";
 import { usePage , router, Head } from "@inertiajs/react";
-import { Card }from '@/components/ui/card';
 import { Button } from "@/components/ui/button";
 import { Dialog , DialogContent , DialogFooter, DialogHeader , DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
-import { route } from "ziggy-js";
-import { SheetClose } from "@/components/ui/sheet";
-import { Pencil, Plus, Trash, User } from "lucide-react";
+import { Pencil, Plus, Trash2, User } from "lucide-react";
 
 const emptyForm = {
     first_name : '', 
@@ -193,7 +190,7 @@ export default function Guests() {
                                                 className="mr-2"
                                                 onClick={() => handleOpenDelete(guest.guest_id)}
                                                 >
-                                                    <Trash className="text-red-600" size={18} />
+                                                    <Trash2 className="text-red-600" size={18} />
                                             </Button>
                                         </td>
                                     </tr>

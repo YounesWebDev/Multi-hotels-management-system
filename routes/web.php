@@ -18,10 +18,12 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class,'index'])->name('dashboard');
     Route::resource('hotels', HotelController::class)->only(['index','store','update','destroy']);
-    Route::get('/assign-manager',[AssignManagerController::class , 'index'])->name('assign-manager');
-    Route::post('/assign-manager/{manager}/assign',[AssignManagerController::class,'assign'])->name('assign-manager.assign');
-    Route::post('/assign-manager/{manager}/unassign',[AssignManagerController::class,'unassign'])->name('assign-manager.unassign');
-    Route::post('/user/{id}/toggle-active', [AssignManagerController::class,'toggleActive'])->name('user.toggleActive');
+    Route::middleware(['admin'])->group(function () {
+        Route::get('/assign-manager',[AssignManagerController::class , 'index'])->name('assign-manager');
+        Route::post('/assign-manager/{manager}/assign',[AssignManagerController::class,'assign'])->name('assign-manager.assign');
+        Route::post('/assign-manager/{manager}/unassign',[AssignManagerController::class,'unassign'])->name('assign-manager.unassign');
+        Route::post('/user/{id}/toggle-active', [AssignManagerController::class,'toggleActive'])->name('user.toggleActive');
+    });
     Route::resource('rooms' , RoomController::class)->except(['create','edit','update']); 
     Route::resource('guests' , GuestController::class)->except(['create','edit']);
 });

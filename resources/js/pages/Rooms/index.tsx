@@ -206,7 +206,7 @@ export default function ManageRooms() {
                         </thead>
                         <tbody>
                             {rooms && rooms.length > 0 ? (
-                                rooms.map((room) => (
+                                rooms.map((room : Room) => (
                                     <tr key={room.room_id} className="border-t dark:border-gray-700">
                                         <td className="px-4 py-2">{room.room_number}</td>
                                         <td className="px-4 py-2 capitalize">{room.type}</td>
