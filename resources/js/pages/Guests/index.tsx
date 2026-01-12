@@ -16,6 +16,7 @@ const emptyForm = {
     check_out: ''
 };
 
+
 export default function Guests() {
     const {guests} = usePage().props ;
     const [open, setOpen] = useState(false);

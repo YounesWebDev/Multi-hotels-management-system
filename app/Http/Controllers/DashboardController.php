@@ -44,7 +44,7 @@ class DashboardController extends Controller
         return \Inertia\Inertia::render('dashboard', [
             'isAdmin' => false,
             'hotel' => $hotel,
-            'guestCount' => $guestsCount,
+            'guestsCount' => $guestsCount,
             'roomsCount' => $roomsCount,
             'bookingsCount' => $bookingsCount
         ]);

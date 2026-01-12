@@ -4,6 +4,7 @@ import { Dialog , DialogContent , DialogHeader , DialogTitle , DialogDescription
 import {Users , Bed , CalendarCheck2 , Building2 , UserCog, User} from 'lucide-react';
 import React, {useState} from "react";
 import AppLayout from "@/layouts/app-layout";
+import { channel } from "diagnostics_channel";
 
 // Room structure received from Laravel
 interface Room {
