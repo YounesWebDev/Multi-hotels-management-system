@@ -77,3 +77,11 @@ RUN sed -ri 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
     /etc/apache2/sites-available/000-default.conf \
     /etc/apache2/apache2.conf \
     /etc/apache2/conf-available/*.conf
+
+# ✅✅✅ ADDED (NO REMOVES): Render Free needs a startup script (no shell / no predeploy)
+# Create docker/start.sh in your repo (I gave you its content before)
+COPY docker/start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
+# ✅✅✅ ADDED: run the startup script (it will start Apache)
+CMD ["/usr/local/bin/start.sh"]

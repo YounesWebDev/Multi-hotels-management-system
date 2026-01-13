@@ -1,13 +1,22 @@
 #!/bin/sh
 set -e
 
-PORT="${PORT:-10000}"
+# 1) Ensure Laravel writable dirs exist (Render containers start clean)
+mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
 
-sed -i "s/Listen 80/Listen ${PORT}/" /etc/apache2/ports.conf
-sed -i "s/:80>/:${PORT}>/" /etc/apache2/sites-available/000-default.conf
+# 2) Permissions (Apache runs as www-data)
+chown -R www-data:www-data storage bootstrap/cache || true
+chmod -R ug+rwx storage bootstrap/cache || true
 
+# 3) Clear caches safely
 php artisan config:clear || true
 php artisan route:clear || true
 php artisan view:clear || true
+
+# 4) OPTIONAL: run migrations automatically (only if you enable it in Render env)
+# Set RUN_MIGRATIONS=true in Render if you want this.
+if [ "${RUN_MIGRATIONS}" = "true" ]; then
+  php artisan migrate --force || true
+fi
 
 exec apache2-foreground
