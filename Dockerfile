@@ -5,49 +5,54 @@ FROM composer:2 AS php_deps
 
 WORKDIR /app
 
-# Copy composer files first for better caching
 COPY composer.json composer.lock ./
 
-# Install vendor without scripts (artisan not copied yet)
 RUN composer install \
     --no-dev \
     --no-interaction \
     --no-progress \
     --prefer-dist \
-    --no-scripts
+    --optimize-autoloader
 
-# Now copy the full project (so artisan exists)
 COPY . .
 
-# Run Laravel's package discovery (now artisan exists)
+# Don't fail the build if artisan needs env values
 RUN php artisan package:discover --ansi || true
 
 
 # =========================================================
-# 2) Assets build stage (Vite) - needs PHP for Wayfinder
+# 2) Assets build stage (Node + PHP CLI for Wayfinder)
 # =========================================================
-FROM php:8.2-cli AS assets_build
+FROM node:20-bookworm AS assets_build
 
 WORKDIR /app
 
-# Install Node.js (and git/curl) inside this stage
-RUN apt-get update && apt-get install -y curl git unzip \
-  && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-  && apt-get install -y nodejs \
+# Install PHP CLI + common extensions needed for artisan
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    php8.2-cli php8.2-mbstring php8.2-xml php8.2-curl php8.2-zip \
+    unzip git ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy package files first for caching
 COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
 
-# Install deps depending on your lockfile
+# Install JS deps depending on lockfile
 RUN \
   if [ -f package-lock.json ]; then npm ci; \
   elif [ -f yarn.lock ]; then corepack enable && yarn install --frozen-lockfile; \
   elif [ -f pnpm-lock.yaml ]; then corepack enable && pnpm install --frozen-lockfile; \
   else npm install; fi
 
-# Copy the full project for building assets
+# Copy full project
 COPY . .
+
+# IMPORTANT: copy PHP vendor deps so artisan works in this stage
+COPY --from=php_deps /app/vendor ./vendor
+
+# Provide minimal env so artisan commands don't crash
+ENV APP_ENV=production
+ENV APP_DEBUG=false
+ENV APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
 
 # Build Vite assets (Wayfinder will now find `php`)
 RUN \
@@ -63,7 +68,7 @@ RUN \
 FROM php:8.2-apache
 
 # System deps + PHP extensions
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     git unzip libzip-dev \
   && docker-php-ext-install pdo_mysql zip \
   && a2enmod rewrite \
@@ -82,16 +87,14 @@ COPY . .
 # Copy vendor from composer stage
 COPY --from=php_deps /app/vendor ./vendor
 
-# Copy built assets from assets stage (Vite outputs to public/build)
+# Copy built assets from node stage (Vite outputs to public/build)
 COPY --from=assets_build /app/public/build ./public/build
 
-# Permissions (important on many hosts)
+# Permissions
 RUN chown -R www-data:www-data /var/www/html \
  && chmod -R 775 storage bootstrap/cache
 
-EXPOSE 80
+# Optional but useful (won’t fail the build if it can’t run)
+RUN php artisan storage:link || true
 
-# Laravel optimizations (safe; won't break if env isn't fully ready)
-RUN php artisan config:cache || true \
- && php artisan route:cache || true \
- && php artisan view:cache || true
+EXPOSE 80
