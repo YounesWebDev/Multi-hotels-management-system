@@ -1,28 +1,40 @@
 # =========================================================
-# 1) Composer deps stage (Laravel PHP dependencies)
+# 1) Composer deps stage
 # =========================================================
 FROM composer:2 AS php_deps
 
 WORKDIR /app
 
-# Copy full project first so "artisan" exists when Composer runs scripts
-COPY . .
+# Copy composer files first for better caching
+COPY composer.json composer.lock ./
 
-# Install PHP dependencies (production)
+# Install vendor without scripts (artisan not copied yet)
 RUN composer install \
     --no-dev \
     --no-interaction \
     --no-progress \
     --prefer-dist \
-    --optimize-autoloader
+    --no-scripts
+
+# Now copy the full project (so artisan exists)
+COPY . .
+
+# Run Laravel's package discovery (now artisan exists)
+RUN php artisan package:discover --ansi || true
 
 
 # =========================================================
-# 2) Assets build stage (Vite / React)
+# 2) Assets build stage (Vite) - needs PHP for Wayfinder
 # =========================================================
-FROM node:20-alpine AS assets_build
+FROM php:8.2-cli AS assets_build
 
 WORKDIR /app
+
+# Install Node.js (and git/curl) inside this stage
+RUN apt-get update && apt-get install -y curl git unzip \
+  && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+  && apt-get install -y nodejs \
+  && rm -rf /var/lib/apt/lists/*
 
 # Copy package files first for caching
 COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
@@ -30,14 +42,14 @@ COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
 # Install deps depending on your lockfile
 RUN \
   if [ -f package-lock.json ]; then npm ci; \
-  elif [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
+  elif [ -f yarn.lock ]; then corepack enable && yarn install --frozen-lockfile; \
   elif [ -f pnpm-lock.yaml ]; then corepack enable && pnpm install --frozen-lockfile; \
   else npm install; fi
 
 # Copy the full project for building assets
 COPY . .
 
-# Build Vite assets
+# Build Vite assets (Wayfinder will now find `php`)
 RUN \
   if [ -f package-lock.json ]; then npm run build; \
   elif [ -f yarn.lock ]; then yarn build; \
@@ -70,16 +82,16 @@ COPY . .
 # Copy vendor from composer stage
 COPY --from=php_deps /app/vendor ./vendor
 
-# Copy built assets from node stage (Vite outputs to public/build)
+# Copy built assets from assets stage (Vite outputs to public/build)
 COPY --from=assets_build /app/public/build ./public/build
 
-# Permissions
+# Permissions (important on many hosts)
 RUN chown -R www-data:www-data /var/www/html \
  && chmod -R 775 storage bootstrap/cache
 
 EXPOSE 80
 
-# Laravel optimizations (won't fail build if env isn't ready)
+# Laravel optimizations (safe; won't break if env isn't fully ready)
 RUN php artisan config:cache || true \
  && php artisan route:cache || true \
  && php artisan view:cache || true
