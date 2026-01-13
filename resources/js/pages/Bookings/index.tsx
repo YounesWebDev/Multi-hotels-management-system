@@ -425,6 +425,11 @@ export default function ManageBookings() {
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                        {availableRooms.length === 0 && (
+                                            <div className="text-xs text-amber-600 dark:text-amber-400">
+                                                There is no room available.
+                                            </div>
+                                        )}
 
                                         {errors.room_id && (
                                             <div className="text-red-500 text-xs">
