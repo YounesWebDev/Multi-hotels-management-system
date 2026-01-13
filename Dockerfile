@@ -1,30 +1,24 @@
 # =========================================================
-# 1) Composer deps stage
+# 1) Composer deps stage (Laravel PHP dependencies)
 # =========================================================
 FROM composer:2 AS php_deps
 
 WORKDIR /app
 
-# Copy composer files first for better caching
-COPY composer.json composer.lock ./
+# Copy full project first so "artisan" exists when Composer runs scripts
+COPY . .
 
-# Install vendor without scripts (artisan not copied yet)
+# Install PHP dependencies (production)
 RUN composer install \
     --no-dev \
     --no-interaction \
     --no-progress \
     --prefer-dist \
-    --no-scripts
-
-# Now copy the full project (so artisan exists)
-COPY . .
-
-# Run Laravel's package discovery (now artisan exists)
-RUN php artisan package:discover --ansi || true
+    --optimize-autoloader
 
 
 # =========================================================
-# 2) Assets build stage (Vite)
+# 2) Assets build stage (Vite / React)
 # =========================================================
 FROM node:20-alpine AS assets_build
 
@@ -79,15 +73,13 @@ COPY --from=php_deps /app/vendor ./vendor
 # Copy built assets from node stage (Vite outputs to public/build)
 COPY --from=assets_build /app/public/build ./public/build
 
-# Permissions (important on many hosts)
+# Permissions
 RUN chown -R www-data:www-data /var/www/html \
  && chmod -R 775 storage bootstrap/cache
 
-# Render (and many platforms) provide PORT env var; Apache listens on 80.
-# We'll make Apache listen on 80 (Render routes traffic to it).
 EXPOSE 80
 
-# Laravel optimizations (safe; won't break if env isn't fully ready)
+# Laravel optimizations (won't fail build if env isn't ready)
 RUN php artisan config:cache || true \
  && php artisan route:cache || true \
  && php artisan view:cache || true
