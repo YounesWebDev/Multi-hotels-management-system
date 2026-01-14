@@ -1,6 +1,12 @@
 #!/bin/sh
 set -e
 
+# ✅ ADDED: Ensure Aiven CA secret file is readable by PHP (Apache runs as www-data)
+# Render Secret Files may be mounted with restricted permissions.
+if [ -f /etc/secrets/aiven-ca.pem ]; then
+  chmod 644 /etc/secrets/aiven-ca.pem || true
+fi
+
 # 1) Ensure Laravel writable dirs exist (Render containers start clean)
 mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
 
