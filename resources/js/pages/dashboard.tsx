@@ -2,9 +2,9 @@ import { Head,usePage } from "@inertiajs/react";
 import { Card } from "@/components/ui/card";
 import { Dialog , DialogContent , DialogHeader , DialogTitle , DialogDescription , DialogClose } from "@/components/ui/dialog";
 import {Users , Bed , CalendarCheck2 , Building2 , UserCog, User} from 'lucide-react';
-import React, {useState} from "react";
+import { useState } from "react";
 import AppLayout from "@/layouts/app-layout";
-import { channel } from "diagnostics_channel";
+import { type SharedData } from "@/types";
 
 // Room structure received from Laravel
 interface Room {
@@ -24,6 +24,19 @@ interface Hotel {
     rooms:Room[];
 }
 
+interface DashboardPageProps {
+    isAdmin: boolean;
+    hotels?: Hotel[];
+    hotel?: Hotel;
+    guestsCount?: number;
+    roomsCount?: number;
+    bookingsCount?: number;
+    totalHotels?: number;
+    totalRooms?: number;
+    totalManagers?: number;
+    totalGuests?: number;
+}
+
 export default function Dashboard() {
     // Get props sent from Laravel controller
     const {
@@ -38,10 +51,20 @@ export default function Dashboard() {
         totalManagers,
         totalGuests,
         auth
-    } = usePage().props as unknown as any;
+    } = usePage<SharedData & DashboardPageProps>().props;
 
     // Current logged-in user
     const user = auth?.user;
+
+    // Dialog state to show hotel details
+    const [open , setOpen] = useState(false);
+    const [selectedHotel , setSelectedHotel] = useState<Hotel | null>(null);
+
+    // Handle hotel card click
+    const handleHotelClick = (hotel : Hotel) => {
+        setSelectedHotel(hotel);
+        setOpen(true);
+    }
 
     // Guard: manager with no assigned hotel
     if(user?.role === 'manager' && !user?.tenant_id){
@@ -55,16 +78,6 @@ export default function Dashboard() {
                 </div>
             </AppLayout>
         );
-    }
-
-    // Dialog state to show hotel details
-    const [open , setOpen] = useState(false);
-    const [selectedHotel , setSelectedHotel] = useState<Hotel | null>(null);
-
-    // Handle hotel card click
-    const handleHotelClick = (hotel : Hotel) => {
-        setSelectedHotel(hotel);
-        setOpen(true);
     }
 
     // Admin dashboard view

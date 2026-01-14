@@ -47,6 +47,8 @@ interface Room {
     status: string;
 }
 
+type ValidationErrors = Record<string, string[]>;
+
 /* ======================================================
     Initial empty form
 ====================================================== */
@@ -66,11 +68,11 @@ export default function ManageBookings() {
     ====================================================== */
 
     // Props sent from BookingController@index
-    const { bookings = [], guests = [], rooms = [] } = usePage().props as unknown as {
+    const { bookings = [], guests = [], rooms = [] } = usePage<{
         bookings: Booking[];
         guests: Guest[];
         rooms: Room[];
-    };
+    }>().props;
 
     // Safety checks to ensure arrays
     const bookingList = Array.isArray(bookings) ? bookings : [];
@@ -91,7 +93,7 @@ export default function ManageBookings() {
     const [loading, setLoading] = useState(false);
 
     // Laravel validation errors
-    const [errors, setErrors] = useState<{ [key: string]: string[] }>({});
+    const [errors, setErrors] = useState<ValidationErrors>({});
 
     // Edit mode state
     const [isEdit, setIsEdit] = useState(false);
@@ -106,7 +108,7 @@ export default function ManageBookings() {
     ====================================================== */
 
     // Filters rooms based on availability and booking rules
-    const availableRooms = roomsList.filter((room: any) => {
+    const availableRooms = roomsList.filter((room: Room) => {
 
         // Only available rooms
         if (room.status !== "available") return false;
@@ -117,7 +119,7 @@ export default function ManageBookings() {
         }
 
         // Exclude rooms already booked by another booking
-        const isBooked = bookingList.some((b: any) => {
+        const isBooked = bookingList.some((b: Booking) => {
             if (String(b.room_id) !== String(room.room_id)) return false;
 
             // Allow same room if editing this booking
@@ -130,7 +132,7 @@ export default function ManageBookings() {
 
         // Prevent same guest from booking multiple rooms on same date
         if (form.guest_id && form.check_in) {
-            const guestHasBooking = bookingList.some((b: any) => {
+            const guestHasBooking = bookingList.some((b: Booking) => {
                 if (isEdit && editId && b.booking_id === editId) return false;
 
                 return (
@@ -161,7 +163,7 @@ export default function ManageBookings() {
     };
 
     // Open "Edit booking" modal
-    const handleOpenEdit = (booking: any) => {
+    const handleOpenEdit = (booking: Booking) => {
         setForm({
             guest_id: booking.guest_id,
             room_id: booking.room_id,
@@ -216,7 +218,7 @@ export default function ManageBookings() {
                     setLoading(false);
                     handleClose();
                 },
-                onError: (err: any) => {
+                onError: (err: ValidationErrors) => {
                     setLoading(false);
                     setErrors(err);
                 },
@@ -226,7 +228,7 @@ export default function ManageBookings() {
 
         // Validate selected room before submit
         const selectedRoom = roomsList.find(
-            (r: any) => String(r.room_id) === String(form.room_id)
+            (r: Room) => String(r.room_id) === String(form.room_id)
         );
 
         if (!selectedRoom || selectedRoom.status !== "available") {
@@ -242,7 +244,7 @@ export default function ManageBookings() {
                     setLoading(false);
                     handleClose();
                 },
-                onError: (err: any) => {
+                onError: (err: ValidationErrors) => {
                     setLoading(false);
                     setErrors(err);
                 },
@@ -256,7 +258,7 @@ export default function ManageBookings() {
                 setLoading(false);
                 handleClose();
             },
-            onError: (err: any) => {
+            onError: (err: ValidationErrors) => {
                 setLoading(false);
                 setErrors(err);
             },
@@ -300,7 +302,7 @@ export default function ManageBookings() {
 
                         <tbody>
                             {bookingList.length > 0 ? (
-                                bookingList.map((booking: any) => (
+                                bookingList.map((booking) => (
                                     <tr key={booking.booking_id} className="border-t dark:border-gray-700">
                                         <td className="px-4 py-2">
                                             {guestsList.find(
@@ -415,7 +417,7 @@ export default function ManageBookings() {
                                                 <SelectValue placeholder="Select room" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {availableRooms.map((r: any) => (
+                                                {availableRooms.map((r: Room) => (
                                                     <SelectItem
                                                         key={r.room_id}
                                                         value={String(r.room_id)}

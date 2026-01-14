@@ -7,6 +7,18 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { Pencil, Plus, Trash2, User } from "lucide-react";
 
+interface Guest {
+    guest_id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+    check_in: string;
+    check_out: string;
+}
+
+type ValidationErrors = Record<string, string[]>;
+
 const emptyForm = {
     first_name : '', 
     last_name: '',
@@ -18,11 +30,11 @@ const emptyForm = {
 
 
 export default function Guests() {
-    const {guests} = usePage().props ;
+    const { guests } = usePage<{ guests: Guest[] }>().props;
     const [open, setOpen] = useState(false);
     const [form, setForm] = useState(emptyForm);
     const [loading, setLoading] = useState(false);
-    const [errors, setErrors] = useState<{ [key: string]: string[] }>({});
+    const [errors, setErrors] = useState<ValidationErrors>({});
 
     const [isEdit, setIsEdit] = useState(false);
     const [editId, setEditId] = useState<number | null>(null);
@@ -46,7 +58,7 @@ export default function Guests() {
         };
 
         // Open Edit modal
-    const handleOpenEdit = (guest: any) => {
+    const handleOpenEdit = (guest: Guest) => {
         setForm({
             first_name : guest.first_name, 
             last_name: guest.last_name,
@@ -99,7 +111,7 @@ export default function Guests() {
                     setLoading(false);
                     handleClose();
                 },
-                onError: (err: any) =>{
+                onError: (err: ValidationErrors) =>{
                     setLoading(false);
                     setErrors(err);
                 },
@@ -115,7 +127,7 @@ export default function Guests() {
                     setLoading(false);
                     handleClose();
                 },
-                onError: (err : any) => {
+                onError: (err : ValidationErrors) => {
                     setLoading(false);
                     setErrors(err);
                 }
@@ -127,7 +139,7 @@ export default function Guests() {
                     setLoading(false);
                     handleClose();
                 },
-                onError: (err : any) => {
+                onError: (err : ValidationErrors) => {
                     setLoading(false);
                     setErrors(err);
                 }

@@ -34,6 +34,8 @@ interface Room {
     status: string;
 }
 
+type ValidationErrors = Record<string, string[]>;
+
 /* ======================================================
     Initial empty form
 ====================================================== */
@@ -50,7 +52,7 @@ export default function ManageRooms() {
         Data from Inertia
     ====================================================== */
 
-    const { rooms } = usePage().props as unknown as { rooms: Room[] };
+    const { rooms } = usePage<{ rooms: Room[] }>().props;
 
     /* ======================================================
         State
@@ -59,7 +61,7 @@ export default function ManageRooms() {
     const [open, setOpen] = useState(false);
     const [form, setForm] = useState(emptyForm);
     const [loading, setLoading] = useState(false);
-    const [errors, setErrors] = useState<{ [key: string]: string[] }>({});
+    const [errors, setErrors] = useState<ValidationErrors>({});
 
     const [isEdit, setIsEdit] = useState(false);
     const [editId, setEditId] = useState<number | null>(null);
@@ -135,7 +137,7 @@ export default function ManageRooms() {
                     setLoading(false);
                     handleClose();
                 },
-                onError: (err: any) => {
+                onError: (err: ValidationErrors) => {
                     setLoading(false);
                     setErrors(err);
                 },
@@ -150,7 +152,7 @@ export default function ManageRooms() {
                     setLoading(false);
                     handleClose();
                 },
-                onError: (err: any) => {
+                onError: (err: ValidationErrors) => {
                     setLoading(false);
                     setErrors(err);
                 },
@@ -164,7 +166,7 @@ export default function ManageRooms() {
                 setLoading(false);
                 handleClose();
             },
-            onError: (err: any) => {
+            onError: (err: ValidationErrors) => {
                 setLoading(false);
                 setErrors(err);
             },

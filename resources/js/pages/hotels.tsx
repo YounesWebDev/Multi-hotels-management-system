@@ -15,6 +15,8 @@ interface Hotel {
     created_at:string;
 }
 
+type ValidationErrors = Record<string, string[]>;
+
 // Initial empty form state
 const emptyForm = {
     hotel_name:'',
@@ -25,7 +27,7 @@ const emptyForm = {
 export default function ManageHotels() {
 
     // Get hotels data from Inertia props
-    const {hotels} = usePage().props as unknown as {hotels: Hotel[]};
+    const {hotels} = usePage<{hotels: Hotel[]}>().props;
 
     // Dialog open/close state
     const [open , setOpen] = useState(false);
@@ -37,7 +39,7 @@ export default function ManageHotels() {
     const [loading, setLoading] = useState(false);
 
     // Validation errors from Laravel
-    const [errors, setErrors] = useState<{ [key: string ] : string[]}>({});
+    const [errors, setErrors] = useState<ValidationErrors>({});
 
     // Determines if we are editing or adding
     const [isEdit, setIsEdit] = useState(false);
@@ -109,7 +111,7 @@ export default function ManageHotels() {
                     setLoading(false);
                     handleClose();
                 },
-                onError: (err: any) => {
+                onError: (err: ValidationErrors) => {
                     setLoading(false);
                     setErrors(err);
                 },
@@ -122,7 +124,7 @@ export default function ManageHotels() {
                     setLoading(false);
                     handleClose();
                 },
-                onError: (err : any) => {
+                onError: (err : ValidationErrors) => {
                     setLoading(false);
                     setErrors(err);
                 },
@@ -134,7 +136,7 @@ export default function ManageHotels() {
                     setLoading(false);
                     handleClose();
                 },
-                onError: (err : any) => {
+                onError: (err : ValidationErrors) => {
                     setLoading(false);
                     setErrors(err);
                 },
