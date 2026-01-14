@@ -1,7 +1,18 @@
 import Heading from '@/components/heading';
-import { Button } from '@/components/ui/button';
+import AppLogo from '@/components/app-logo';
 import { Separator } from '@/components/ui/separator';
+import {
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarGroupLabel,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarSeparator,
+} from '@/components/ui/sidebar';
 import { cn, isSameUrl, resolveUrl } from '@/lib/utils';
+import { dashboard } from '@/routes';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit } from '@/routes/profile';
 import { show } from '@/routes/two-factor';
@@ -49,30 +60,49 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
             />
 
             <div className="flex flex-col lg:flex-row lg:space-x-12">
-                <aside className="w-full max-w-xl lg:w-48">
-                    <nav className="flex flex-col space-y-1 space-x-0">
-                        {sidebarNavItems.map((item, index) => (
-                            <Button
-                                key={`${resolveUrl(item.href)}-${index}`}
-                                size="sm"
-                                variant="ghost"
-                                asChild
-                                className={cn('w-full justify-start', {
-                                    'bg-muted': isSameUrl(
-                                        currentPath,
-                                        item.href,
-                                    ),
-                                })}
-                            >
-                                <Link href={item.href}>
-                                    {item.icon && (
-                                        <item.icon className="h-4 w-4" />
-                                    )}
-                                    {item.title}
-                                </Link>
-                            </Button>
-                        ))}
-                    </nav>
+                <aside className="w-full max-w-xl lg:w-64">
+                    <div className="border-sidebar-border bg-sidebar text-sidebar-foreground rounded-lg border p-2 shadow-sm">
+                        <SidebarHeader className="p-0">
+                            <SidebarMenu>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton size="lg" asChild>
+                                        <Link href={dashboard()} prefetch>
+                                            <AppLogo />
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            </SidebarMenu>
+                        </SidebarHeader>
+                        <SidebarSeparator className="my-1" />
+                        <SidebarGroup className="p-1">
+                            <SidebarGroupLabel>Settings</SidebarGroupLabel>
+                            <SidebarGroupContent>
+                                <SidebarMenu>
+                                    {sidebarNavItems.map((item, index) => (
+                                        <SidebarMenuItem
+                                            key={`${resolveUrl(item.href)}-${index}`}
+                                        >
+                                            <SidebarMenuButton
+                                                asChild
+                                                isActive={isSameUrl(
+                                                    currentPath,
+                                                    item.href,
+                                                )}
+                                                className={cn('justify-start')}
+                                            >
+                                                <Link href={item.href}>
+                                                    {item.icon && (
+                                                        <item.icon className="h-4 w-4" />
+                                                    )}
+                                                    <span>{item.title}</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                    ))}
+                                </SidebarMenu>
+                            </SidebarGroupContent>
+                        </SidebarGroup>
+                    </div>
                 </aside>
 
                 <Separator className="my-6 lg:hidden" />
