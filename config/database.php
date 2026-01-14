@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Str;
-use PDO; // ✅ ADDED
+use PDO;
 
 return [
 
@@ -9,27 +9,14 @@ return [
     |--------------------------------------------------------------------------
     | Default Database Connection Name
     |--------------------------------------------------------------------------
-    |
-    | Here you may specify which of the database connections below you wish
-    | to use as your default connection for database operations. This is
-    | the connection which will be utilized unless another connection
-    | is explicitly specified when you execute a query / statement.
-    |
     */
-
     'default' => env('DB_CONNECTION', 'mysql'),
 
     /*
     |--------------------------------------------------------------------------
     | Database Connections
     |--------------------------------------------------------------------------
-    |
-    | Below are all of the database connections defined for your application.
-    | An example configuration is provided for each database system which
-    | is supported by Laravel. You're free to add / remove connections.
-    |
     */
-
     'connections' => [
 
         'sqlite' => [
@@ -46,24 +33,36 @@ return [
 
         'mysql' => [
             'driver' => 'mysql',
+
+            // Keep DB_URL support (but make sure DB_URL is NOT set in Render if you want host/port to apply)
             'url' => env('DB_URL'),
+
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
             'database' => env('DB_DATABASE', 'laravel'),
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
+
             'unix_socket' => env('DB_SOCKET', ''),
+
             'charset' => env('DB_CHARSET', 'utf8mb4'),
             'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+
             'prefix' => '',
             'prefix_indexes' => true,
+
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                (PHP_VERSION_ID >= 80500 ? \Pdo\Mysql::ATTR_SSL_CA : \PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
 
-                // ✅ ADDED: helps with managed MySQL SSL handshakes on some platforms (Render/Aiven)
-                (PHP_VERSION_ID >= 80500 ? \Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT : \PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT) => false,
+            // ✅ UPDATED: use classic PDO constants (most compatible), still uses your Render env vars
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+
+                // Managed DBs sometimes fail hostname verification; keep verify off (you can later set true)
+                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => filter_var(
+                    env('MYSQL_ATTR_SSL_VERIFY_SERVER_CERT', 'false'),
+                    FILTER_VALIDATE_BOOLEAN
+                ) ? 1 : 0,
             ]) : [],
         ],
 
@@ -82,11 +81,14 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                (PHP_VERSION_ID >= 80500 ? \Pdo\Mysql::ATTR_SSL_CA : \PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
 
-                // ✅ ADDED: helps with managed MySQL SSL handshakes on some platforms (Render/Aiven)
-                (PHP_VERSION_ID >= 80500 ? \Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT : \PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT) => false,
+            // ✅ SAME FIX for mariadb (harmless even if unused)
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => filter_var(
+                    env('MYSQL_ATTR_SSL_VERIFY_SERVER_CERT', 'false'),
+                    FILTER_VALIDATE_BOOLEAN
+                ) ? 1 : 0,
             ]) : [],
         ],
 
@@ -126,13 +128,7 @@ return [
     |--------------------------------------------------------------------------
     | Migration Repository Table
     |--------------------------------------------------------------------------
-    |
-    | This table keeps track of all the migrations that have already run for
-    | your application. Using this information, we can determine which of
-    | the migrations on disk haven't actually been run on the database.
-    |
     */
-
     'migrations' => [
         'table' => 'migrations',
         'update_date_on_publish' => true,
@@ -142,13 +138,7 @@ return [
     |--------------------------------------------------------------------------
     | Redis Databases
     |--------------------------------------------------------------------------
-    |
-    | Redis is an open source, fast, and advanced key-value store that also
-    | provides a richer body of commands than a typical key-value system
-    | such as Memcached. You may define your connection settings here.
-    |
     */
-
     'redis' => [
 
         'client' => env('REDIS_CLIENT', 'phpredis'),
