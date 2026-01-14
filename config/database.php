@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Str;
+use PDO; // ✅ ADDED
 
 return [
 
@@ -60,6 +61,9 @@ return [
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 (PHP_VERSION_ID >= 80500 ? \Pdo\Mysql::ATTR_SSL_CA : \PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
+
+                // ✅ ADDED: helps with managed MySQL SSL handshakes on some platforms (Render/Aiven)
+                (PHP_VERSION_ID >= 80500 ? \Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT : \PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT) => false,
             ]) : [],
         ],
 
@@ -80,6 +84,9 @@ return [
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 (PHP_VERSION_ID >= 80500 ? \Pdo\Mysql::ATTR_SSL_CA : \PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
+
+                // ✅ ADDED: helps with managed MySQL SSL handshakes on some platforms (Render/Aiven)
+                (PHP_VERSION_ID >= 80500 ? \Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT : \PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT) => false,
             ]) : [],
         ],
 
