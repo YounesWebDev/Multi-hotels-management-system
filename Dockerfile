@@ -5,7 +5,8 @@ FROM php:8.2-cli AS php_deps
 WORKDIR /app
 
 # ✅ ADDED: install composer (because we no longer use composer:2)
-RUN apt-get update && apt-get install -y git unzip curl libzip-dev \
+# ✅ ADDED: ca-certificates (needed for SSL connections like Aiven)
+RUN apt-get update && apt-get install -y git unzip curl libzip-dev ca-certificates \
   && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
   && rm -rf /var/lib/apt/lists/*
 
@@ -17,11 +18,11 @@ RUN apt-get update && apt-get install -y \
     libpng-dev libjpeg-dev libfreetype6-dev \
     libxml2-dev \
     libonig-dev \
+    ca-certificates \
   && docker-php-ext-configure gd --with-freetype --with-jpeg \
   && docker-php-ext-install -j$(nproc) \
     pdo_mysql zip mbstring exif pcntl bcmath intl gd \
   && rm -rf /var/lib/apt/lists/*
-
 
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --no-scripts
@@ -40,10 +41,13 @@ RUN if [ -f package-lock.json ]; then npm ci; \
 # 3) Build assets (Wayfinder + Vite)
 FROM php:8.2-cli AS assets
 WORKDIR /app
-RUN apt-get update && apt-get install -y curl unzip git \
+
+# ✅ ADDED: ca-certificates (safe + helps TLS)
+RUN apt-get update && apt-get install -y curl unzip git ca-certificates \
   && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
   && apt-get install -y nodejs \
   && rm -rf /var/lib/apt/lists/*
+
 COPY . .
 COPY --from=php_deps /app/vendor ./vendor
 COPY --from=node_deps /app/node_modules ./node_modules
@@ -54,13 +58,17 @@ RUN npm run build
 # 4) Final runtime image (Apache)
 FROM php:8.2-apache AS final
 WORKDIR /var/www/html
-RUN apt-get update && apt-get install -y libzip-dev unzip \
+
+# ✅ ADDED: ca-certificates for Aiven SSL
+RUN apt-get update && apt-get install -y libzip-dev unzip ca-certificates \
   && docker-php-ext-install pdo_mysql zip \
   && a2enmod rewrite \
   && rm -rf /var/lib/apt/lists/*
+
 COPY . .
 COPY --from=php_deps /app/vendor ./vendor
 COPY --from=assets /app/public/build ./public/build
+
 RUN mkdir -p bootstrap/cache storage/framework/{cache,sessions,views} storage/logs \
   && chown -R www-data:www-data bootstrap/cache storage \
   && chmod -R ug+rwx bootstrap/cache storage
@@ -78,9 +86,33 @@ RUN sed -ri 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
     /etc/apache2/apache2.conf \
     /etc/apache2/conf-available/*.conf
 
-# ✅ ADDED: copy and run the Render start script (migrations, etc.)
-RUN mkdir -p /docker
-COPY docker/start.sh /docker/start.sh
-RUN chmod +x /docker/start.sh
+# ✅ ADDED: Render provides $PORT (often 10000). Make Apache listen on it.
+RUN sed -ri 's/Listen 80/Listen ${PORT}/g' /etc/apache2/ports.conf \
+ && sed -ri 's/<VirtualHost \*:80>/<VirtualHost \*:${PORT}>/g' /etc/apache2/sites-available/000-default.conf
+
+# ✅ ADDED: create start script INSIDE the image (no missing file, no repo changes needed)
+# - runs migrations if enabled
+# - ensures correct permissions
+# - starts apache
+RUN mkdir -p /docker \
+ && printf '%s\n' \
+'#!/usr/bin/env bash' \
+'set -e' \
+'' \
+'cd /var/www/html' \
+'' \
+'# Ensure storage permissions (safe on every boot)' \
+'chown -R www-data:www-data storage bootstrap/cache || true' \
+'chmod -R ug+rwx storage bootstrap/cache || true' \
+'' \
+'# Optional: run migrations if you enable it in Render ENV (RUN_MIGRATIONS=true)' \
+'if [ "${RUN_MIGRATIONS}" = "true" ]; then' \
+'  php artisan migrate --force || true' \
+'fi' \
+'' \
+'# Start Apache in foreground' \
+'exec apache2-foreground' \
+> /docker/start.sh \
+ && chmod +x /docker/start.sh
 
 CMD ["/docker/start.sh"]
