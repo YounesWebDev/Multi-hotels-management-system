@@ -94,12 +94,23 @@ RUN sed -ri 's/Listen 80/Listen ${PORT}/g' /etc/apache2/ports.conf \
 # - runs migrations if enabled
 # - ensures correct permissions
 # - starts apache
+# ✅ FIX: Ensure Aiven CA secret file is readable by PHP before DB SSL handshake
 RUN mkdir -p /docker \
  && printf '%s\n' \
 '#!/usr/bin/env bash' \
 'set -e' \
 '' \
 'cd /var/www/html' \
+'' \
+'# ✅ Ensure Aiven CA secret file is readable (Render secret files may be restrictive)' \
+'if [ -f /etc/secrets/aiven-ca.pem ]; then' \
+'  chmod 644 /etc/secrets/aiven-ca.pem || true' \
+'fi' \
+'' \
+'# Clear caches safely (helps ensure fresh env is used)' \
+'php artisan config:clear || true' \
+'php artisan route:clear || true' \
+'php artisan view:clear || true' \
 '' \
 '# Ensure storage permissions (safe on every boot)' \
 'chown -R www-data:www-data storage bootstrap/cache || true' \
