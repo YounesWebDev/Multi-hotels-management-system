@@ -2,7 +2,6 @@
 
 A web application to manage **multiple hotels** from one platform — rooms, reservations, guests, and staff workflows — built with **Laravel** and a modern **React (TypeScript) front-end**.
 
-> Repo: `YounesWebDev/Multi-hotels-management-system`
 
 ---
 
@@ -16,7 +15,6 @@ A web application to manage **multiple hotels** from one platform — rooms, res
 - ✅ Admin dashboard (statistics & quick actions)
 - ✅ Responsive UI
 
-> Note: Adapt this list to match exactly what your current modules include.
 
 ---
 
@@ -26,8 +24,6 @@ A web application to manage **multiple hotels** from one platform — rooms, res
 - **Frontend:** React + TypeScript (Vite)
 - **Database:** MySQL (recommended)
 - **DevOps:** Docker + GitHub Actions workflows
-
-(Your repo is mostly PHP + TypeScript, matching a Laravel + React setup.)  
 
 ---
 
