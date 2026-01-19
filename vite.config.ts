@@ -22,8 +22,8 @@ export default defineConfig(({ mode }) => {
         tailwindcss(),
     ];
 
-    // ✅ Run Wayfinder only when we explicitly enable it
-    if (env.VITE_WAYFINDER === 'true') {
+    // ✅ Run Wayfinder by default for builds, allow opt-out via VITE_WAYFINDER=false
+    if (env.VITE_WAYFINDER !== 'false') {
         plugins.push(
             wayfinder({
                 formVariants: true,
